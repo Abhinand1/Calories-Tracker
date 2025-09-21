@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abhinand's Calorie Tracker v5.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, collection, query, addDoc, getDocs, setDoc, orderBy, serverTimestamp, getDoc, deleteDoc, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        window.firebase = {
+            initializeApp,
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            getFirestore,
+            doc,
+            onSnapshot,
+            collection,
+            query,
+            addDoc,
+            getDocs,
+            setDoc,
+            orderBy,
+            serverTimestamp,
+            getDoc,
+            deleteDoc,
+            where,
+            setLogLevel
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #e2e8f0; /* Light gray */
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1a202c; /* Dark charcoal as a base */
+            background-image: repeating-conic-gradient(from 0deg at 50% 50%, #1a202c 0deg, #1f2733 45deg, #1a202c 90deg),
+                              radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.5) 0%, transparent 50%),
+                              radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.5) 0%, transparent 50%);
+            background-size: 200px 200px, cover, cover;
+            opacity: 0.8;
+            filter: blur(1px); /* Reduced blur for pattern visibility */
+            z-index: -1;
+        }
+        h1, h2 {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .container {
+            max-width: 600px;
+        }
+        .card-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        input[type="radio"]:checked + span {
+            background-color: #6366f1; /* Indigo */
+            color: white;
+            border-color: #6366f1;
+        }
+        .vibrant-btn {
+            background-image: linear-gradient(to right, #8b5cf6, #ec4899); /* Purple to pink gradient */
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .vibrant-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4);
+        }
+        .recalculate-btn, .back-btn {
+            background-color: #4a5568; /* Gray */
+            transition: background-color 0.2s;
+        }
+        .recalculate-btn:hover, .back-btn:hover {
+            background-color: #2d3748; /* Darker gray */
+        }
+        .result-card, .user-id-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .card-title {
+            background-image: linear-gradient(to right, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .delete-btn {
+            background-color: transparent;
+            border: none;
+            color: #ef4444; /* Red */
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .delete-btn:hover {
+            color: #dc2626;
+        }
+        .auth-button-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .auth-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e2e8f0;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .auth-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        .icon-btn {
+            background-color: transparent;
+            border: none;
+            color: #a0aec0; /* Lighter gray */
+            cursor: pointer;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .icon-btn:hover {
+            color: #cbd5e0; /* Even lighter gray */
+            transform: scale(1.1);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="container bg-gray-800 bg-opacity-90 rounded-2xl shadow-2xl p-8 space-y-8 animate-fade-in">
+
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row items-center justify-between text-center space-y-4 md:space-y-0 md:space-x-4">
+            <div class="flex items-center justify-center flex-grow">
+                <h1 class="text-2xl font-bold text-white md:text-3xl text-center">Abhinand's Calorie Tracker</h1>
+                <span class="text-xs text-yellow-300 ml-2 font-bold">v5.0</span>
+            </div>
+            <div id="auth-buttons" class="flex items-center space-x-2">
+                <button id="login-btn" class="auth-btn">Login</button>
+                <button id="signup-btn" class="auth-btn">Sign Up</button>
+            </div>
+            <div id="profile-area" class="hidden flex items-center space-x-2">
+                <span id="welcome-message" class="text-sm font-semibold text-white"></span>
+                <button id="home-btn" class="icon-btn text-xl md:text-2xl" title="Go to Home">
+                    <i class="fas fa-home"></i>
+                </button>
+                <button id="view-progress-btn" class="icon-btn text-xl md:text-2xl" title="View Progress">
+                    <i class="fas fa-chart-line"></i>
+                </button>
+                <button id="logout-btn" class="auth-btn">Logout</button>
+            </div>
+        </header>
+
+        <!-- Login Form -->
+        <div id="login-form" class="hidden space-y-6 fade-in">
+            <h2 class="text-3xl font-bold text-center text-white">Login</h2>
+            <div>
+                <label for="login-username" class="block text-sm font-medium text-gray-300 mb-1">Username</label>
+                <input type="text" id="login-username" placeholder="Enter your username" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+            </div>
+            <div>
+                <label for="login-pin" class="block text-sm font-medium text-gray-300 mb-1">4-Digit PIN</label>
+                <input type="password" id="login-pin" maxlength="4" placeholder="Enter your 4-digit PIN" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+            </div>
+            <button id="login-submit-btn" class="vibrant-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg">Login</button>
+            <div id="login-error-message" class="hidden p-3 bg-red-800 border-2 border-red-500 text-red-200 rounded-lg text-sm text-center"></div>
+            <button id="login-back-btn" class="back-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg">Back</button>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="signup-form" class="hidden space-y-6 fade-in">
+            <h2 class="text-3xl font-bold text-center text-white">Sign Up</h2>
+            <div>
+                <label for="signup-username" class="block text-sm font-medium text-gray-300 mb-1">Create Username</label>
+                <input type="text" id="signup-username" placeholder="e.g., abhinand123" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+                <p class="text-xs text-gray-400 mt-1">Hint: Use a combination of your name and numbers.</p>
+            </div>
+            <div>
+                <label for="signup-pin" class="block text-sm font-medium text-gray-300 mb-1">Create 4-Digit PIN</label>
+                <input type="password" id="signup-pin" maxlength="4" placeholder="e.g., 1234" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+            </div>
+            <div>
+                <label for="signup-confirm-pin" class="block text-sm font-medium text-gray-300 mb-1">Confirm PIN</label>
+                <input type="password" id="signup-confirm-pin" maxlength="4" placeholder="Re-enter your PIN" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+            </div>
+            <button id="signup-submit-btn" class="vibrant-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg">Sign Up</button>
+            <div id="signup-error-message" class="hidden p-3 bg-red-800 border-2 border-red-500 text-red-200 rounded-lg text-sm text-center"></div>
+            <button id="signup-back-btn" class="back-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg">Back</button>
+        </div>
+
+        <!-- Input Form -->
+        <div id="calculator-form" class="space-y-6">
+            <div>
+                <label for="age" class="block text-sm font-medium text-gray-300 mb-1">Age</label>
+                <input type="number" id="age" name="age" placeholder="Enter your age" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <span class="block text-sm font-medium text-gray-300 mb-2">Gender</span>
+                    <div class="flex space-x-4">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="gender" value="male" class="sr-only" checked>
+                            <span class="block p-3 text-center border-2 border-gray-600 rounded-lg text-gray-300 transition-colors bg-gray-700">Male</span>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="gender" value="female" class="sr-only">
+                            <span class="block p-3 text-center border-2 border-gray-600 rounded-lg text-gray-300 transition-colors bg-gray-700">Female</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <span class="block text-sm font-medium text-gray-300 mb-2">Units</span>
+                <div class="flex space-x-4">
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="unitSystem" value="metric" class="sr-only" checked>
+                        <span class="block p-3 text-center border-2 border-gray-600 rounded-lg text-gray-300 transition-colors bg-gray-700">Metric (cm, kg)</span>
+                        </label>
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="unitSystem" value="imperial" class="sr-only">
+                        <span class="block p-3 text-center border-2 border-gray-600 rounded-lg text-gray-300 transition-colors bg-gray-700">Imperial (ft/in, lbs)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="metric-inputs">
+                <div class="mb-4">
+                    <label for="heightCm" class="block text-sm font-medium text-gray-300 mb-1">Height (cm)</label>
+                    <input type="number" id="heightCm" name="heightCm" placeholder="e.g., 175" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+                </div>
+                <div>
+                    <label for="weightKg" class="block text-sm font-medium text-gray-300 mb-1">Weight (kg)</label>
+                    <input type="number" id="weightKg" name="weightKg" placeholder="e.g., 70" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+                </div>
+            </div>
+
+            <div id="imperial-inputs" class="hidden">
+                <div class="flex space-x-4 mb-4">
+                    <div class="flex-1">
+                        <label for="heightFt" class="block text-sm font-medium text-gray-300 mb-1">Height (ft)</label>
+                        <input type="number" id="heightFt" name="heightFt" placeholder="e.g., 5" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+                    </div>
+                    <div class="flex-1">
+                        <label for="heightIn" class="block text-sm font-medium text-gray-300 mb-1">Height (in)</label>
+                        <input type="number" id="heightIn" name="heightIn" placeholder="e.g., 10" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+                    </div>
+                </div>
+                <div>
+                    <label for="weightLbs" class="block text-sm font-medium text-gray-300 mb-1">Weight (lbs)</label>
+                    <input type="number" id="weightLbs" name="weightLbs" placeholder="e.g., 150" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+                </div>
+            </div>
+
+            <div>
+                <label for="activity" class="block text-sm font-medium text-gray-300 mb-1">Activity Level</label>
+                <select id="activity" name="activity" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+                    <option value="1.2">Sedentary (little to no exercise)</option>
+                    <option value="1.375">Lightly Active (1-3 days/week)</option>
+                    <option value="1.55">Moderately Active (3-5 days/week)</option>
+                    <option value="1.725">Very Active (6-7 days/week)</option>
+                    <option value="1.9">Extra Active (daily, intense exercise)</option>
+                </select>
+            </div>
+
+            <button id="calculate-btn" class="vibrant-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg">Calculate</button>
+
+            <div id="error-message" class="hidden p-3 bg-red-800 border-2 border-red-500 text-red-200 rounded-lg text-sm text-center">Please fill out all required fields.</div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="hidden space-y-6 fade-in">
+            <h2 class="text-3xl font-bold text-center text-white">Your Results</h2>
+
+            <div class="result-card p-6 rounded-lg space-y-4">
+                <h3 class="text-xl font-semibold card-title">Maintenance</h3>
+                <p class="text-gray-400">Estimated daily calories to maintain your weight.</p>
+                <div class="text-4xl font-bold text-green-400" id="maintenance-calories"></div>
+                <div class="grid grid-cols-3 gap-4 text-center mt-4">
+                    <div class="bg-gray-700 p-3 rounded-md">
+                        <div class="text-xl font-bold text-yellow-300" id="maintenance-protein"></div>
+                        <div class="text-xs text-gray-400">Protein (g)</div>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded-md">
+                        <div class="text-xl font-bold text-yellow-300" id="maintenance-carbs"></div>
+                        <div class="text-xs text-gray-400">Carbs (g)</div>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded-md">
+                        <div class="text-xl font-bold text-yellow-300" id="maintenance-fats"></div>
+                        <div class="text-xs text-gray-400">Fats (g)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-card p-6 rounded-lg space-y-4">
+                <h3 class="text-xl font-semibold card-title">Bulk Up</h3>
+                <p class="text-gray-400">Estimated daily calories to gain muscle.</p>
+                <div class="text-4xl font-bold text-blue-400" id="bulking-calories"></div>
+                <div class="grid grid-cols-3 gap-4 text-center mt-4">
+                    <div class="bg-gray-700 p-3 rounded-md">
+                        <div class="text-xl font-bold text-yellow-300" id="bulking-protein"></div>
+                        <div class="text-xs text-gray-400">Protein (g)</div>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded-md">
+                        <div class="text-xl font-bold text-yellow-300" id="bulking-carbs"></div>
+                        <div class="text-xs text-gray-400">Carbs (g)</div>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded-md">
+                        <div class="text-xl font-bold text-yellow-300" id="bulking-fats"></div>
+                        <div class="text-xs text-gray-400">Fats (g)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-card p-6 rounded-lg space-y-4">
+                <h3 class="text-xl font-semibold card-title">Weight Loss</h3>
+                <p class="text-gray-400">Estimated daily calories for fat loss.</p>
+                <div class="text-4xl font-bold text-pink-400" id="cutting-calories"></div>
+                <div class="grid grid-cols-3 gap-4 text-center mt-4">
+                    <div class="bg-gray-700 p-3 rounded-md">
+                        <div class="text-xl font-bold text-yellow-300" id="cutting-protein"></div>
+                        <div class="text-xs text-gray-400">Protein (g)</div>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded-md">
+                        <div class="text-xl font-bold text-yellow-300" id="cutting-carbs"></div>
+                        <div class="text-xs text-gray-400">Carbs (g)</div>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded-md">
+                        <div class="text-xl font-bold text-yellow-300" id="cutting-fats"></div>
+                        <div class="text-xs text-gray-400">Fats (g)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-4">
+ 
