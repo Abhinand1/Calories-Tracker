@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abhinand's Calorie Tracker v5.0</title>
+    <title>Abhinand's Calorie Tracker v5.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,16 +13,29 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, collection, query, addDoc, getDocs, setDoc, orderBy, serverTimestamp, getDoc, deleteDoc, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+
+        // PASTE YOUR FIREBASE CONFIGURATION HERE
+        // It will look like a JavaScript object with your API key, project ID, etc.
+        const firebaseConfig = {
+          apiKey: "AIzaSyCzwx_Gj66Zt-UW8ebdVl0IMDLC2Jr5feo",
+          authDomain: "calorie-tracker-ff5c2.firebaseapp.com",
+          projectId: "calorie-tracker-ff5c2",
+          storageBucket: "calorie-tracker-ff5c2.firebasestorage.app",
+          messagingSenderId: "789034656449",
+          appId: "1:789034656449:web:cdda8b6c343d87edf0aa40",
+          measurementId: "G-E528L5NQ48"
+        };
+        // DO NOT CHANGE ANYTHING BELOW THIS LINE
 
 
         window.firebase = {
             initializeApp,
             getAuth,
             signInAnonymously,
-            signInWithCustomToken,
             getFirestore,
             doc,
             onSnapshot,
@@ -36,7 +49,8 @@
             getDoc,
             deleteDoc,
             where,
-            setLogLevel
+            setLogLevel,
+            firebaseConfig
         };
     </script>
 
@@ -162,7 +176,7 @@
         <header class="flex flex-col md:flex-row items-center justify-between text-center space-y-4 md:space-y-0 md:space-x-4">
             <div class="flex items-center justify-center flex-grow">
                 <h1 class="text-2xl font-bold text-white md:text-3xl text-center">Abhinand's Calorie Tracker</h1>
-                <span class="text-xs text-yellow-300 ml-2 font-bold">v5.0</span>
+                <span class="text-xs text-yellow-300 ml-2 font-bold">v5.2</span>
             </div>
             <div id="auth-buttons" class="flex items-center space-x-2">
                 <button id="login-btn" class="auth-btn">Login</button>
@@ -429,9 +443,7 @@
         let db, auth, authUser, currentUser, userProfileData;
 
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const firebaseConfig = window.firebase.firebaseConfig;
 
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -442,34 +454,30 @@
                 firebase.setLogLevel('Debug');
 
 
-                if (initialAuthToken) {
-                    await firebase.signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await firebase.signInAnonymously(auth);
-                }
+                await firebase.signInAnonymously(auth);
                 
                 authUser = auth.currentUser;
                 currentUser = localStorage.getItem('current_user');
                 updateAuthUI();
 
 
-                auth.onAuthStateChanged(async (user) => {
+                auth.onAuthStateChanged((user) => {
                     authUser = user;
-                    if (authUser) {
-                        if (currentUser) {
-                            listenForProgressUpdates();
-                        }
+                    if (authUser && currentUser) {
+                        listenForProgressUpdates();
                     } else {
                         console.error("No user signed in.");
                     }
                 });
             } catch (e) {
                 console.error("Firebase initialization failed:", e);
-                const userCard = document.getElementById('user-id-card');
-                if (userCard) {
-                    userCard.classList.remove('hidden');
-                    userCard.innerHTML = `<p class="text-sm text-red-400">Error: Could not connect to database. Functionality will be limited.</p>`;
-                }
+                // Display a message to the user that the database is not connected
+                const errorMessage = "Could not connect to the database. Please check your Firebase configuration in the code.";
+                const errorElement = document.getElementById('signup-error-message');
+                errorElement.textContent = errorMessage;
+                errorElement.classList.remove('hidden');
+                document.getElementById('login-error-message').textContent = errorMessage;
+                document.getElementById('login-error-message').classList.remove('hidden');
             }
 
 
@@ -710,7 +718,7 @@
                     logErrorMsg.classList.add('hidden');
                 }
                 try {
-                    const progressCollectionRef = firebase.collection(db, `artifacts/${appId}/public/data/users/${currentUser}/progress`);
+                    const progressCollectionRef = firebase.collection(db, `users/${currentUser}/progress`);
                     const docData = { weight: weight, timestamp: firebase.serverTimestamp() };
                     await firebase.addDoc(progressCollectionRef, docData);
                     document.getElementById('log-weight').value = '';
@@ -734,7 +742,7 @@
 
 
                 try {
-                    const userDocRef = firebase.doc(db, `artifacts/${appId}/public/data/users/${username}`);
+                    const userDocRef = firebase.doc(db, `users/${username}`);
                     const userDoc = await firebase.getDoc(userDocRef);
                     if (userDoc.exists() && userDoc.data().pin === pin) {
                         localStorage.setItem('current_user', username);
@@ -769,7 +777,7 @@
 
 
                 try {
-                    const userDocRef = firebase.doc(db, `artifacts/${appId}/public/data/users/${username}`);
+                    const userDocRef = firebase.doc(db, `users/${username}`);
                     const userDoc = await firebase.getDoc(userDocRef);
                     if (userDoc.exists()) {
                         signupErrorMsg.textContent = "Username already exists. Please choose another.";
@@ -792,7 +800,7 @@
 
             function listenForProgressUpdates() {
                 if (!currentUser) return;
-                const progressCollectionRef = firebase.collection(db, `artifacts/${appId}/public/data/users/${currentUser}/progress`);
+                const progressCollectionRef = firebase.collection(db, `users/${currentUser}/progress`);
                 const q = firebase.query(progressCollectionRef, firebase.orderBy("timestamp", "desc"));
                 
                 firebase.onSnapshot(q, (snapshot) => {
@@ -847,7 +855,7 @@
                     btn.addEventListener('click', async (e) => {
                         const docId = e.target.dataset.docId;
                         try {
-                            const docRef = firebase.doc(db, `artifacts/${appId}/public/data/users/${currentUser}/progress/${docId}`);
+                            const docRef = firebase.doc(db, `users/${currentUser}/progress/${docId}`);
                             await firebase.deleteDoc(docRef);
                         } catch (e) {
                             console.error("Error deleting document:", e);
