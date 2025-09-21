@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -16,6 +16,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, collection, query, addDoc, getDocs, setDoc, orderBy, serverTimestamp, getDoc, deleteDoc, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
 
         window.firebase = {
             initializeApp,
@@ -38,6 +39,7 @@
             setLogLevel
         };
     </script>
+
 
     <style>
         body {
@@ -152,7 +154,9 @@
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-4">
 
+
     <div class="container bg-gray-800 bg-opacity-90 rounded-2xl shadow-2xl p-8 space-y-8 animate-fade-in">
+
 
         <!-- Header Section -->
         <header class="flex flex-col md:flex-row items-center justify-between text-center space-y-4 md:space-y-0 md:space-x-4">
@@ -176,6 +180,7 @@
             </div>
         </header>
 
+
         <!-- Login Form -->
         <div id="login-form" class="hidden space-y-6 fade-in">
             <h2 class="text-3xl font-bold text-center text-white">Login</h2>
@@ -191,6 +196,7 @@
             <div id="login-error-message" class="hidden p-3 bg-red-800 border-2 border-red-500 text-red-200 rounded-lg text-sm text-center"></div>
             <button id="login-back-btn" class="back-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg">Back</button>
         </div>
+
 
         <!-- Signup Form -->
         <div id="signup-form" class="hidden space-y-6 fade-in">
@@ -213,12 +219,14 @@
             <button id="signup-back-btn" class="back-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg">Back</button>
         </div>
 
+
         <!-- Input Form -->
         <div id="calculator-form" class="space-y-6">
             <div>
                 <label for="age" class="block text-sm font-medium text-gray-300 mb-1">Age</label>
                 <input type="number" id="age" name="age" placeholder="Enter your age" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
             </div>
+
 
             <div class="space-y-4">
                 <div>
@@ -236,6 +244,7 @@
                 </div>
             </div>
 
+
             <div>
                 <span class="block text-sm font-medium text-gray-300 mb-2">Units</span>
                 <div class="flex space-x-4">
@@ -250,6 +259,7 @@
                 </div>
             </div>
 
+
             <div id="metric-inputs">
                 <div class="mb-4">
                     <label for="heightCm" class="block text-sm font-medium text-gray-300 mb-1">Height (cm)</label>
@@ -260,6 +270,7 @@
                     <input type="number" id="weightKg" name="weightKg" placeholder="e.g., 70" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
                 </div>
             </div>
+
 
             <div id="imperial-inputs" class="hidden">
                 <div class="flex space-x-4 mb-4">
@@ -278,6 +289,7 @@
                 </div>
             </div>
 
+
             <div>
                 <label for="activity" class="block text-sm font-medium text-gray-300 mb-1">Activity Level</label>
                 <select id="activity" name="activity" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
@@ -289,14 +301,18 @@
                 </select>
             </div>
 
+
             <button id="calculate-btn" class="vibrant-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg">Calculate</button>
+
 
             <div id="error-message" class="hidden p-3 bg-red-800 border-2 border-red-500 text-red-200 rounded-lg text-sm text-center">Please fill out all required fields.</div>
         </div>
 
+
         <!-- Results Section -->
         <div id="results" class="hidden space-y-6 fade-in">
             <h2 class="text-3xl font-bold text-center text-white">Your Results</h2>
+
 
             <div class="result-card p-6 rounded-lg space-y-4">
                 <h3 class="text-xl font-semibold card-title">Maintenance</h3>
@@ -338,6 +354,7 @@
                 </div>
             </div>
 
+
             <div class="result-card p-6 rounded-lg space-y-4">
                 <h3 class="text-xl font-semibold card-title">Weight Loss</h3>
                 <p class="text-gray-400">Estimated daily calories for fat loss.</p>
@@ -358,5 +375,506 @@
                 </div>
             </div>
 
+
             <div class="flex space-x-4">
- 
+                <button id="set-goal-btn" class="vibrant-btn flex-1 p-4 text-white font-semibold rounded-lg shadow-lg">Set a Goal</button>
+                <button id="track-progress-btn" class="vibrant-btn flex-1 p-4 text-white font-semibold rounded-lg shadow-lg">Track Progress</button>
+            </div>
+            
+            <button id="recalculate-btn" class="recalculate-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg">Recalculate</button>
+        </div>
+        
+        <!-- Goal Setting Section -->
+        <div id="goal-setting-section" class="hidden space-y-6 fade-in">
+            <h2 class="text-3xl font-bold text-center text-white">Set Your Goal</h2>
+            <div class="result-card p-6 rounded-lg space-y-4">
+                <label for="ideal-weight" class="block text-sm font-medium text-gray-300">Ideal Weight (kg)</label>
+                <input type="number" id="ideal-weight" placeholder="Enter your target weight" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+                <button id="calculate-goal-btn" class="vibrant-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg mt-4">Calculate Goal</button>
+                <div id="goal-error-message" class="hidden p-3 bg-red-800 border-2 border-red-500 text-red-200 rounded-lg text-sm text-center">Please enter a valid weight.</div>
+            </div>
+            <div id="goal-results" class="hidden space-y-4 result-card p-6 rounded-lg">
+                <h3 class="text-xl font-semibold card-title">Goal Breakdown</h3>
+                <p id="goal-time" class="text-gray-400 text-lg"></p>
+                <p id="goal-calories" class="text-gray-400"></p>
+                <p id="goal-protein" class="text-gray-400"></p>
+                <p id="goal-carbs" class="text-gray-400"></p>
+                <p id="goal-fats" class="text-gray-400"></p>
+            </div>
+            <button id="goal-back-btn" class="back-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg">Back</button>
+        </div>
+
+
+        <!-- Progress Tracking Section -->
+        <div id="progress-tracking-section" class="hidden space-y-6 fade-in">
+            <h2 class="text-3xl font-bold text-center text-white">Track Your Progress</h2>
+            <div class="result-card p-6 rounded-lg space-y-4">
+                <div id="progress-summary" class="hidden text-sm text-gray-400"></div>
+                <label for="log-weight" class="block text-sm font-medium text-gray-300">Log Current Weight (kg)</label>
+                <input type="number" id="log-weight" placeholder="Enter your current weight" class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 transition-colors">
+                <button id="log-weight-btn" class="vibrant-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg mt-4">Log Weight</button>
+                <div id="log-error-message" class="hidden p-3 bg-red-800 border-2 border-red-500 text-red-200 rounded-lg text-sm text-center">Please enter a valid weight.</div>
+            </div>
+            <div id="no-auth-message" class="hidden p-3 bg-yellow-800 border-2 border-yellow-500 text-yellow-200 rounded-lg text-sm text-center">You must be logged in to save and view your progress.</div>
+            <div class="result-card p-6 rounded-lg">
+                <h3 class="text-xl font-semibold card-title mb-4">Weight History</h3>
+                <div id="weight-list" class="mt-4 space-y-2 max-h-48 overflow-y-auto"></div>
+            </div>
+            <button id="progress-back-btn" class="back-btn w-full p-4 text-white font-semibold rounded-lg shadow-lg">Back</button>
+        </div>
+    </div>
+
+
+    <script type="module">
+        let db, auth, authUser, currentUser, userProfileData;
+
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const firebaseApp = firebase.initializeApp(firebaseConfig);
+                auth = firebase.getAuth(firebaseApp);
+                db = firebase.getFirestore(firebaseApp);
+                firebase.setLogLevel('Debug');
+
+
+                if (initialAuthToken) {
+                    await firebase.signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await firebase.signInAnonymously(auth);
+                }
+                
+                authUser = auth.currentUser;
+                currentUser = localStorage.getItem('current_user');
+                updateAuthUI();
+
+
+                auth.onAuthStateChanged(async (user) => {
+                    authUser = user;
+                    if (authUser) {
+                        if (currentUser) {
+                            listenForProgressUpdates();
+                        }
+                    } else {
+                        console.error("No user signed in.");
+                    }
+                });
+            } catch (e) {
+                console.error("Firebase initialization failed:", e);
+                const userCard = document.getElementById('user-id-card');
+                if (userCard) {
+                    userCard.classList.remove('hidden');
+                    userCard.innerHTML = `<p class="text-sm text-red-400">Error: Could not connect to database. Functionality will be limited.</p>`;
+                }
+            }
+
+
+            const calculatorForm = document.getElementById('calculator-form');
+            const resultsSection = document.getElementById('results');
+            const goalSettingSection = document.getElementById('goal-setting-section');
+            const progressTrackingSection = document.getElementById('progress-tracking-section');
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            
+            const calculateBtn = document.getElementById('calculate-btn');
+            const recalculateBtn = document.getElementById('recalculate-btn');
+            const setGoalBtn = document.getElementById('set-goal-btn');
+            const trackProgressBtn = document.getElementById('track-progress-btn');
+            const viewProgressBtn = document.getElementById('view-progress-btn');
+            const homeBtn = document.getElementById('home-btn');
+            const goalBackBtn = document.getElementById('goal-back-btn');
+            const progressBackBtn = document.getElementById('progress-back-btn');
+            const calculateGoalBtn = document.getElementById('calculate-goal-btn');
+            const logWeightBtn = document.getElementById('log-weight-btn');
+
+
+            const loginBtn = document.getElementById('login-btn');
+            const signupBtn = document.getElementById('signup-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            const loginSubmitBtn = document.getElementById('login-submit-btn');
+            const signupSubmitBtn = document.getElementById('signup-submit-btn');
+            const loginBackBtn = document.getElementById('login-back-btn');
+            const signupBackBtn = document.getElementById('signup-back-btn');
+
+
+            const errorMsg = document.getElementById('error-message');
+            const goalErrorMsg = document.getElementById('goal-error-message');
+            const logErrorMsg = document.getElementById('log-error-message');
+            const loginErrorMsg = document.getElementById('login-error-message');
+            const signupErrorMsg = document.getElementById('signup-error-message');
+            const noAuthMessage = document.getElementById('no-auth-message');
+
+
+            const unitSystemRadios = document.querySelectorAll('input[name="unitSystem"]');
+            const metricInputs = document.getElementById('metric-inputs');
+            const imperialInputs = document.getElementById('imperial-inputs');
+
+
+            function showSection(sectionId) {
+                const sections = [calculatorForm, resultsSection, goalSettingSection, progressTrackingSection, loginForm, signupForm];
+                sections.forEach(sec => sec.classList.add('hidden'));
+                document.getElementById(sectionId).classList.remove('hidden');
+            }
+
+
+            function updateAuthUI() {
+                const authButtons = document.getElementById('auth-buttons');
+                const profileArea = document.getElementById('profile-area');
+                if (currentUser) {
+                    authButtons.classList.add('hidden');
+                    profileArea.classList.remove('hidden');
+                    document.getElementById('welcome-message').textContent = `Welcome, ${currentUser}`;
+                } else {
+                    authButtons.classList.remove('hidden');
+                    profileArea.classList.add('hidden');
+                }
+            }
+            
+            unitSystemRadios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    if (e.target.value === 'metric') {
+                        metricInputs.classList.remove('hidden');
+                        imperialInputs.classList.add('hidden');
+                    } else {
+                        metricInputs.classList.add('hidden');
+                        imperialInputs.classList.remove('hidden');
+                    }
+                });
+            });
+
+
+            calculateBtn.addEventListener('click', () => {
+                const age = parseFloat(document.getElementById('age').value);
+                const gender = document.querySelector('input[name="gender"]:checked').value;
+                const activityLevel = parseFloat(document.getElementById('activity').value);
+                
+                let heightCm, weightKg;
+                const unitSystem = document.querySelector('input[name="unitSystem"]:checked').value;
+                let isValid = true;
+
+
+                if (unitSystem === 'metric') {
+                    heightCm = parseFloat(document.getElementById('heightCm').value);
+                    weightKg = parseFloat(document.getElementById('weightKg').value);
+                    if (isNaN(heightCm) || isNaN(weightKg)) {
+                        isValid = false;
+                    }
+                } else {
+                    const heightFt = parseFloat(document.getElementById('heightFt').value);
+                    const heightIn = parseFloat(document.getElementById('heightIn').value);
+                    const weightLbs = parseFloat(document.getElementById('weightLbs').value);
+                    if (isNaN(heightFt) || isNaN(heightIn) || isNaN(weightLbs)) {
+                        isValid = false;
+                    }
+                    if (isValid) {
+                        heightCm = (heightFt * 30.48) + (heightIn * 2.54);
+                        weightKg = weightLbs / 2.20462;
+                    }
+                }
+
+
+                if (isNaN(age) || !isValid) {
+                    errorMsg.classList.remove('hidden');
+                    return;
+                } else {
+                    errorMsg.classList.add('hidden');
+                }
+
+
+                const bmr = (gender === 'male') ? (10 * weightKg) + (6.25 * heightCm) - (5 * age) + 5 : (10 * weightKg) + (6.25 * heightCm) - (5 * age) - 161;
+                const maintenanceCalories = Math.round(bmr * activityLevel);
+                const bulkingCalories = maintenanceCalories + 300;
+                const cuttingCalories = maintenanceCalories - 500;
+
+
+                const maintenanceMacros = calculateMacros(maintenanceCalories, weightKg);
+                const bulkingMacros = calculateMacros(bulkingCalories, weightKg);
+                const cuttingMacros = calculateMacros(cuttingCalories, weightKg);
+
+
+                userProfileData = {
+                    age, gender, activityLevel, heightCm, weightKg, maintenanceCalories
+                };
+
+
+                document.getElementById('maintenance-calories').textContent = `${maintenanceCalories} kcal`;
+                document.getElementById('maintenance-protein').textContent = `${maintenanceMacros.proteinGrams}`;
+                document.getElementById('maintenance-carbs').textContent = `${maintenanceMacros.carbGrams}`;
+                document.getElementById('maintenance-fats').textContent = `${maintenanceMacros.fatsGrams}`;
+                
+                document.getElementById('bulking-calories').textContent = `${bulkingCalories} kcal`;
+                document.getElementById('bulking-protein').textContent = `${bulkingMacros.proteinGrams}`;
+                document.getElementById('bulking-carbs').textContent = `${bulkingMacros.carbGrams}`;
+                document.getElementById('bulking-fats').textContent = `${bulkingMacros.fatsGrams}`;
+
+
+                document.getElementById('cutting-calories').textContent = `${cuttingCalories} kcal`;
+                document.getElementById('cutting-protein').textContent = `${cuttingMacros.proteinGrams}`;
+                document.getElementById('cutting-carbs').textContent = `${cuttingMacros.carbGrams}`;
+                document.getElementById('cutting-fats').textContent = `${cuttingMacros.fatsGrams}`;
+
+
+                showSection('results');
+            });
+
+
+            setGoalBtn.addEventListener('click', () => showSection('goal-setting-section'));
+            trackProgressBtn.addEventListener('click', () => {
+                showSection('progress-tracking-section');
+                if (!currentUser) {
+                    noAuthMessage.classList.remove('hidden');
+                } else {
+                    noAuthMessage.classList.add('hidden');
+                }
+            });
+            viewProgressBtn.addEventListener('click', () => {
+                showSection('progress-tracking-section');
+                if (!currentUser) {
+                    noAuthMessage.classList.remove('hidden');
+                } else {
+                    noAuthMessage.classList.add('hidden');
+                }
+            });
+            recalculateBtn.addEventListener('click', () => showSection('calculator-form'));
+            homeBtn.addEventListener('click', () => showSection('calculator-form'));
+            goalBackBtn.addEventListener('click', () => showSection('results'));
+            progressBackBtn.addEventListener('click', () => showSection('results'));
+            loginBtn.addEventListener('click', () => showSection('login-form'));
+            signupBtn.addEventListener('click', () => showSection('signup-form'));
+            loginBackBtn.addEventListener('click', () => showSection('calculator-form'));
+            signupBackBtn.addEventListener('click', () => showSection('calculator-form'));
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('current_user');
+                currentUser = null;
+                updateAuthUI();
+                showSection('calculator-form');
+            });
+
+
+            calculateGoalBtn.addEventListener('click', () => {
+                const idealWeight = parseFloat(document.getElementById('ideal-weight').value);
+                if (isNaN(idealWeight) || !userProfileData) {
+                    goalErrorMsg.classList.remove('hidden');
+                    return;
+                } else {
+                    goalErrorMsg.classList.add('hidden');
+                }
+
+
+                const currentWeight = userProfileData.weightKg;
+                const weightDifference = idealWeight - currentWeight;
+                const totalCalories = Math.abs(weightDifference * 7700);
+                
+                let dailyChange;
+                if (weightDifference > 0) {
+                    dailyChange = 300;
+                } else {
+                    dailyChange = -500;
+                }
+                
+                const daysToGoal = Math.round(totalCalories / Math.abs(dailyChange));
+                const months = Math.floor(daysToGoal / 30);
+                const remainingDays = daysToGoal % 30;
+
+
+                const newMaintenanceCalories = calculateBMR(idealWeight, userProfileData) * userProfileData.activityLevel;
+                const newMacros = calculateMacros(newMaintenanceCalories + dailyChange, idealWeight);
+
+
+                document.getElementById('goal-time').textContent = `Estimated Time to Goal: ~${months} months and ${remainingDays} days`;
+                document.getElementById('goal-calories').textContent = `Daily Calories to consume: ${Math.round(newMaintenanceCalories + dailyChange)} kcal`;
+                document.getElementById('goal-protein').textContent = `Protein: ${newMacros.proteinGrams}g`;
+                document.getElementById('goal-carbs').textContent = `Carbs: ${newMacros.carbGrams}g`;
+                document.getElementById('goal-fats').textContent = `Fats: ${newMacros.fatsGrams}g`;
+
+
+                document.getElementById('goal-results').classList.remove('hidden');
+            });
+
+
+            logWeightBtn.addEventListener('click', async () => {
+                if (!currentUser) {
+                    noAuthMessage.classList.remove('hidden');
+                    return;
+                }
+                noAuthMessage.classList.add('hidden');
+                const weight = parseFloat(document.getElementById('log-weight').value);
+                if (isNaN(weight)) {
+                    logErrorMsg.classList.remove('hidden');
+                    return;
+                } else {
+                    logErrorMsg.classList.add('hidden');
+                }
+                try {
+                    const progressCollectionRef = firebase.collection(db, `artifacts/${appId}/public/data/users/${currentUser}/progress`);
+                    const docData = { weight: weight, timestamp: firebase.serverTimestamp() };
+                    await firebase.addDoc(progressCollectionRef, docData);
+                    document.getElementById('log-weight').value = '';
+                } catch (e) {
+                    console.error("Error logging weight:", e);
+                }
+            });
+
+
+            loginSubmitBtn.addEventListener('click', async () => {
+                const username = document.getElementById('login-username').value.trim();
+                const pin = document.getElementById('login-pin').value.trim();
+                loginErrorMsg.classList.add('hidden');
+
+
+                if (!username || !pin) {
+                    loginErrorMsg.textContent = "Please enter both username and PIN.";
+                    loginErrorMsg.classList.remove('hidden');
+                    return;
+                }
+
+
+                try {
+                    const userDocRef = firebase.doc(db, `artifacts/${appId}/public/data/users/${username}`);
+                    const userDoc = await firebase.getDoc(userDocRef);
+                    if (userDoc.exists() && userDoc.data().pin === pin) {
+                        localStorage.setItem('current_user', username);
+                        currentUser = username;
+                        updateAuthUI();
+                        listenForProgressUpdates();
+                        showSection('calculator-form');
+                    } else {
+                        loginErrorMsg.textContent = "Invalid username or PIN.";
+                        loginErrorMsg.classList.remove('hidden');
+                    }
+                } catch (e) {
+                    loginErrorMsg.textContent = "Login failed. Please try again.";
+                    loginErrorMsg.classList.remove('hidden');
+                    console.error("Login error:", e);
+                }
+            });
+
+
+            signupSubmitBtn.addEventListener('click', async () => {
+                const username = document.getElementById('signup-username').value.trim();
+                const pin = document.getElementById('signup-pin').value.trim();
+                const confirmPin = document.getElementById('signup-confirm-pin').value.trim();
+                signupErrorMsg.classList.add('hidden');
+
+
+                if (!username || pin.length !== 4 || pin !== confirmPin) {
+                    signupErrorMsg.textContent = "Please fill out all fields correctly. PIN must be 4 digits and match.";
+                    signupErrorMsg.classList.remove('hidden');
+                    return;
+                }
+
+
+                try {
+                    const userDocRef = firebase.doc(db, `artifacts/${appId}/public/data/users/${username}`);
+                    const userDoc = await firebase.getDoc(userDocRef);
+                    if (userDoc.exists()) {
+                        signupErrorMsg.textContent = "Username already exists. Please choose another.";
+                        signupErrorMsg.classList.remove('hidden');
+                    } else {
+                        await firebase.setDoc(userDocRef, { pin: pin });
+                        localStorage.setItem('current_user', username);
+                        currentUser = username;
+                        updateAuthUI();
+                        listenForProgressUpdates();
+                        showSection('calculator-form');
+                    }
+                } catch (e) {
+                    signupErrorMsg.textContent = "Signup failed. Please try again.";
+                    signupErrorMsg.classList.remove('hidden');
+                    console.error("Signup error:", e);
+                }
+            });
+
+
+            function listenForProgressUpdates() {
+                if (!currentUser) return;
+                const progressCollectionRef = firebase.collection(db, `artifacts/${appId}/public/data/users/${currentUser}/progress`);
+                const q = firebase.query(progressCollectionRef, firebase.orderBy("timestamp", "desc"));
+                
+                firebase.onSnapshot(q, (snapshot) => {
+                    const progressData = [];
+                    snapshot.forEach(doc => {
+                        progressData.push({ id: doc.id, ...doc.data() });
+                    });
+                    progressData.reverse(); // To show oldest first, as we ordered by desc above.
+                    renderProgressHistory(progressData);
+                    renderProgressSummary(progressData);
+                });
+            }
+
+
+            function calculateMacros(totalCalories, weightKg) {
+                const proteinGrams = Math.round(weightKg * 1.8);
+                const proteinCalories = proteinGrams * 4;
+                const fatCalories = totalCalories * 0.25;
+                const fatsGrams = Math.round(fatCalories / 9);
+                const carbCalories = totalCalories - proteinCalories - fatCalories;
+                const carbGrams = Math.round(carbCalories / 4);
+                return { proteinGrams, carbGrams, fatsGrams };
+            }
+
+
+            function calculateBMR(weightKg, profileData) {
+                const { age, gender, heightCm } = profileData;
+                return (gender === 'male') ? (10 * weightKg) + (6.25 * heightCm) - (5 * age) + 5 : (10 * weightKg) + (6.25 * heightCm) - (5 * age) - 161;
+            }
+
+
+            function renderProgressHistory(data) {
+                const list = document.getElementById('weight-list');
+                list.innerHTML = '';
+                if (data.length === 0) {
+                    list.innerHTML = `<p class="text-center text-gray-500">No weight data logged yet.</p>`;
+                    return;
+                }
+                data.forEach(entry => {
+                    const date = entry.timestamp ? new Date(entry.timestamp.seconds * 1000) : new Date();
+                    const formattedDate = date.toLocaleDateString();
+                    const item = document.createElement('div');
+                    item.className = 'flex justify-between items-center p-3 rounded-lg bg-gray-700';
+                    item.innerHTML = `
+                        <span class="text-sm text-gray-300">${formattedDate}</span>
+                        <span class="text-lg font-bold text-yellow-300">${entry.weight} kg</span>
+                        <button class="delete-btn" data-doc-id="${entry.id}">&times;</button>
+                    `;
+                    list.prepend(item);
+                });
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const docId = e.target.dataset.docId;
+                        try {
+                            const docRef = firebase.doc(db, `artifacts/${appId}/public/data/users/${currentUser}/progress/${docId}`);
+                            await firebase.deleteDoc(docRef);
+                        } catch (e) {
+                            console.error("Error deleting document:", e);
+                        }
+                    });
+                });
+            }
+
+
+            function renderProgressSummary(data) {
+                const summary = document.getElementById('progress-summary');
+                if (data.length < 2) {
+                    summary.classList.add('hidden');
+                    return;
+                }
+                const firstWeight = data[0].weight;
+                const lastWeight = data[data.length - 1].weight;
+                const change = (lastWeight - firstWeight).toFixed(1);
+                
+                summary.innerHTML = `
+                    <p>Starting Weight: <span class="text-green-400 font-bold">${firstWeight} kg</span></p>
+                    <p>Current Weight: <span class="text-green-400 font-bold">${lastWeight} kg</span></p>
+                    <p>Total Change: <span class="text-green-400 font-bold">${change} kg</span></p>
+                `;
+                summary.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
